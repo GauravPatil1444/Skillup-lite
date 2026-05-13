@@ -1,0 +1,131 @@
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAppSelector, useAppDispatch } from '../store/hooks';
+import { logout } from '../store/authSlice';
+import logo from '../assets/Logo.png';
+import Loader from './components/Loader';
+import { useQuery } from '@tanstack/react-query'; //
+
+const MyCourses = () => {
+  const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+  const { user } = useAppSelector((state) => state.auth);
+
+  // Replaced manual useEffect with useQuery
+  const { data: enrolledCourses, isLoading, isError } = useQuery({
+    queryKey: ['my-enrollments', user?.id],
+    queryFn: async () => {
+      // Aligned with GET /enrollments?userId=:userId
+      const res = await fetch(`http://127.0.0.1:8000/enrollments?userId=${user?.id}`);
+      if (!res.ok) throw new Error('Failed to fetch enrolled courses');
+      return res.json();
+    },
+    enabled: !!user?.id, // Only run the query if a user ID exists
+  });
+
+  const handleLogout = () => {
+    dispatch(logout());
+    navigate('/login');
+  };
+
+  return (
+    <div className="min-h-screen bg-[#192A56] font-sans relative">
+      {/* Action Buttons */}
+      <div className="absolute top-8 right-8 flex gap-4 z-10">
+        <button 
+          onClick={() => navigate('/courses')}
+          className="px-5 py-2 rounded-lg bg-[#A5BEFC]/20 border border-[#FBFCF8] text-[#FBFCF8] text-sm font-bold hover:bg-[#A5BEFC]/40 transition-all"
+        >
+          Catalog
+        </button>
+        <button 
+          onClick={handleLogout}
+          className="px-5 py-2 rounded-lg bg-red-500/20 border border-red-400 text-red-100 text-sm font-bold hover:bg-red-500/40 transition-all"
+        >
+          Logout
+        </button>
+      </div>
+
+      {/* Header Section */}
+      <div className="flex flex-col items-center pt-24 pb-32 px-4 gap-6 text-center">
+        <img src={logo} alt="Skillup Logo" className="w-32 h-auto mb-4" />
+        <div className="space-y-2">
+          <h1 className="text-[#FBFCF8] text-4xl font-black tracking-tight">
+            My <span className="text-[#7D96FF]">Learning</span> Dashboard
+          </h1>
+          <p className="text-[#FBFCF8]/70 text-lg font-medium">
+            Keep track of your progress and continue learning.
+          </p>
+        </div>
+      </div>
+
+      {/* Course Content Area */}
+      <div className="bg-[#FBFCF8] rounded-t-[60px] min-h-[60vh] px-8 md:px-16 py-16 shadow-2xl">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center justify-between mb-12">
+            <h2 className="text-3xl font-black text-[#192A56] tracking-tight">Your Enrolled Courses</h2>
+            <span className="bg-[#A5BEFC]/20 text-[#192A56] px-4 py-1 rounded-full font-bold text-sm">
+              {enrolledCourses?.length || 0} Total
+            </span>
+          </div>
+
+          {isLoading ? (
+            <div className="flex justify-center py-20"><Loader /></div>
+          ) : isError ? (
+            <div className="text-center py-20 text-red-500 font-bold">Error loading courses. Please try again.</div>
+          ) : enrolledCourses && enrolledCourses.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-10">
+              {enrolledCourses.map((course: any) => (
+                <div 
+                  key={course.id} 
+                  className="group cursor-pointer hover:-translate-y-2 transition-all duration-300"
+                  onClick={() => navigate(`/learn/${course.courseId}/overview`)}
+                >
+                  <div className="relative aspect-video rounded-3xl overflow-hidden mb-5 shadow-xl border border-gray-100">
+                    <img 
+                      src={course.thumbnails} 
+                      alt={course.title} 
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                    />
+                    <div className="absolute top-4 left-4">
+                      <span className={`px-3 py-1 rounded-full text-xs font-bold shadow-md ${
+                        course.status === 'Completed' ? 'bg-green-500 text-white' : 
+                        course.status === 'In Progress' ? 'bg-[#7D96FF] text-white' : 'bg-gray-200 text-gray-700'
+                      }`}>
+                        {course.status || 'Not Started'}
+                      </span>
+                    </div>
+                  </div>
+                  <h3 className="font-extrabold text-[#192A56] text-lg leading-tight mb-2 line-clamp-2">
+                    {course.title}
+                  </h3>
+                  <div className="flex items-center gap-2">
+                    <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-[#7D96FF]" 
+                        style={{ width: `${course.progress || 0}%` }}
+                      ></div>
+                    </div>
+                    <span className="text-xs font-bold text-gray-400">{course.progress || 0}%</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-20 text-center gap-4">
+              <p className="text-[#192A56] text-2xl font-bold opacity-30">No courses saved yet.</p>
+              <button 
+                onClick={() => navigate('/courses')}
+                className="text-[#7D96FF] font-bold hover:underline"
+              >
+                Browse the catalog to get started
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default MyCourses;
