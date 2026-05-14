@@ -1,48 +1,54 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Outlet, NavLink, useLocation } from 'react-router-dom';
+import { useParams, Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { useAppSelector } from '../store/hooks';
 import logo from '../assets/Logo.png';
 
 const LearnLayout = () => {
-  const { id } = useParams(); // Playlist ID from URL
+  const { id } = useParams(); 
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user } = useAppSelector((state) => state.auth);
 
-  // Initialize state from navigation state (passed from Catalog/CourseView)
-  const [selectedCourse, setSelectedCourse] = useState(location.state?.courseDetails || null);
+  const [selectedCourse, setSelectedCourse] = useState(location.state?.selectedCourse || null);
   const [coursevideolist, setCoursevideolist] = useState(location.state?.videos || []);
+  const [enrollmentId, setEnrollmentId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
-      // If we already have the course and videos from the state, don't fetch again
-      if (selectedCourse && coursevideolist.length > 0) return;
-
+      if (!user?.id) return;
       setLoading(true);
+      
       try {
-        // Fetching the video list via POST to the gateway
+        // 1. Fetch the Enrollment details from Firestore
+        // This is crucial because it contains the channelTitle (instructor name)
+        const enrollRes = await fetch(`http://127.0.0.1:8000/enrollments?userId=${user.id}`);
+        const enrollments = await enrollRes.json();
+        const currentEnrollment = enrollments.find((e: any) => e.courseId === id);
+
+        if (currentEnrollment) {
+          setEnrollmentId(currentEnrollment.id);
+          
+          // 2. DATA RECOVERY: If selectedCourse is missing (on refresh), restore it from Firestore
+          if (!selectedCourse) {
+            setSelectedCourse({
+              ...currentEnrollment,
+              // Fallback if channelTitle is missing in old records
+              channelTitle: currentEnrollment.channelTitle || "Expert Instructor"
+            });
+          }
+        }
+
+        // 3. Fetch Course Videos
         const videoRes = await fetch('http://127.0.0.1:8000/fetchcoursevideos', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ q: id })
         });
-
-        if (!videoRes.ok) throw new Error("Failed to fetch videos");
-        
         const videoData = await videoRes.json();
-        
-        // Clean the data to remove metadata objects that cause UI "ghost" items
         const cleanVideos = videoData.filter((v: any) => v && v.videoID);
         setCoursevideolist(cleanVideos);
 
-        // DATA SYNC: If selectedCourse is null (usually on page refresh), 
-        // we populate it with basic info from the video results so the UI can render.
-        if (!selectedCourse) {
-          setSelectedCourse({
-            playlistId: id,
-            title: cleanVideos[0]?.title || "Course Content",
-            description: "Detailed overview available in the catalog.",
-            channelTitle: "Instructor"
-          });
-        }
       } catch (e) {
         console.error("LearnLayout fetch error:", e);
       } finally {
@@ -51,35 +57,44 @@ const LearnLayout = () => {
     };
 
     fetchData();
-  }, [id, selectedCourse]); // Re-run if ID changes or if course data is still missing
+  }, [id, user?.id]);
 
   return (
     <div className="min-h-screen bg-[#192A56]">
-      {/* Header Section */}
-      <div className="flex flex-col items-center pt-12 pb-24 px-4 text-center">
-        <img src={logo} alt="Skillup" className="w-24 h-auto mb-6" />
+      {/* Top Nav */}
+      <div className="absolute top-8 inset-x-0 px-6 flex justify-between md:justify-end md:gap-4 z-20">
+        <button
+          onClick={() => navigate("/courses")}
+          className="px-5 py-2 rounded-xl bg-[#A5BEFC]/10 border border-white/20 text-[#FBFCF8] text-sm font-bold hover:bg-[#A5BEFC]/30 backdrop-blur-md transition-all"
+        >
+          Catalog
+        </button>
+        <button
+          onClick={() => navigate("/my-courses")}
+          className="px-5 py-2 rounded-xl bg-[#A5BEFC]/10 border border-white/20 text-[#FBFCF8] text-sm font-bold hover:bg-[#A5BEFC]/30 backdrop-blur-md transition-all"
+        >
+          Dashboard
+        </button>
+      </div>
+
+      <div className="flex flex-col items-center pt-16 pb-14 px-4 text-center">
+        <img src={logo} alt="Skillup" className="w-24 h-auto mb-6 animate-pulse" />
         <h1 className="text-[#FBFCF8] text-2xl font-black tracking-tight">
-          Learning Center
+          {selectedCourse?.title || "Learning Hub"}
         </h1>
       </div>
 
-      {/* Main Content Card */}
       <div className="bg-[#FBFCF8] rounded-t-[60px] min-h-[70vh] p-8 md:p-12 shadow-2xl relative">
         <div className="max-w-5xl mx-auto">
-          
-          {/* Tabs Navigation */}
           <div className="flex border-b border-gray-200 mb-10 overflow-x-auto scrollbar-hide">
             {['overview', 'lessons'].map((tab) => (
               <NavLink 
                 key={tab}
                 to={`/learn/${id}/${tab}`}
-                // Pass the current state through the NavLink so it doesn't get lost when switching tabs
-                state={{ courseDetails: selectedCourse, videos: coursevideolist }}
+                state={{ selectedCourse, videos: coursevideolist }}
                 className={({ isActive }) => 
                   `px-10 py-4 font-bold text-lg capitalize transition-all border-b-4 whitespace-nowrap ${
-                    isActive 
-                      ? 'border-[#7D96FF] text-[#192A56]' 
-                      : 'border-transparent text-gray-400 hover:text-[#192A56]/60'
+                    isActive ? 'border-[#7D96FF] text-[#192A56]' : 'border-transparent text-gray-400 hover:text-[#192A56]/60'
                   }`
                 }
               >
@@ -88,10 +103,7 @@ const LearnLayout = () => {
             ))}
           </div>
 
-          {/* The Outlet acts as a gateway to CourseOverview and CourseLessons. 
-             We pass the data via context so the children can access it instantly.
-          */}
-          <Outlet context={{ selectedCourse, coursevideolist, loading }} />
+          <Outlet context={{ selectedCourse, coursevideolist, loading, enrollmentId }} />
         </div>
       </div>
     </div>

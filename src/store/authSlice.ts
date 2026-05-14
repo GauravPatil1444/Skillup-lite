@@ -11,12 +11,15 @@ interface AuthState {
   user: User | null;
   loading: boolean;
   error: string | null;
+  // Added to track if Firebase has finished its initial check
+  isInitialized: boolean; 
 }
 
 const initialState: AuthState = {
   user: null,
   loading: false,
   error: null,
+  isInitialized: false, 
 };
 
 export const authSlice = createSlice({
@@ -25,15 +28,20 @@ export const authSlice = createSlice({
   reducers: {
     setUser: (state, action: PayloadAction<User | null>) => {
       state.user = action.payload;
+      // Once we set the user (or null), we are initialized
+      state.isInitialized = true; 
+      state.loading = false;
     },
     setLoading: (state, action: PayloadAction<boolean>) => {
       state.loading = action.payload;
     },
     setError: (state, action: PayloadAction<string | null>) => {
       state.error = action.payload;
+      state.loading = false;
     },
     logout: (state) => {
       state.user = null;
+      state.isInitialized = true;
     },
   },
 });

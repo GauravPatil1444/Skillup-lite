@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from '../store/hooks';
 import { logout } from '../store/authSlice';
 import logo from '../assets/Logo.png';
+import logoutIcon from "../assets/exit.png";
 
 const VideoPreview = () => {
   const navigate = useNavigate();
@@ -32,13 +33,13 @@ const VideoPreview = () => {
           onClick={handleLogout}
           className="px-5 py-2 rounded-lg bg-red-500/20 border border-red-400 text-red-100 text-sm font-bold hover:bg-red-500/40 transition-all"
         >
-          Logout
+          <img src={logoutIcon} width={25} alt="Logout" />
         </button>
       </div>
 
       {/* Header Section */}
-      <div className="flex flex-col items-center pt-16 pb-28 px-4 gap-4 text-center">
-        <img src={logo} alt="Skillup Logo" className="w-28 h-auto mb-2" />
+      <div className="flex flex-col items-center pt-16 pb-10 px-4 gap-4 text-center">
+        <img src={logo} alt="Skillup Logo" className="w-28 h-auto mb-2 animate-pulse" />
         {user && (
           <h1 className="text-[#FBFCF8] text-2xl font-black tracking-tight">
             Learning: <span className="text-[#7D96FF]">{item?.title || "New Course"}</span>
@@ -74,7 +75,7 @@ const VideoPreview = () => {
               {item?.title}
             </h2>
             <p className="text-[#192A56]/60 font-bold text-lg">
-              Presented by {item?.channelTitle || "SkillUp Expert"}
+              Presented by {item?.channelTitle || "SkillUp"}
             </p>
             
             <div className="pt-6 border-t border-gray-200">

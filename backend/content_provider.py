@@ -115,7 +115,7 @@ def fetchcoursevideos(query):
     }
     response = requests.get(URL3, params=params)
     results = response.json()
-    print(results)
+    # print(results)
     # metadata.append({'nextPageToken':results['nextPageToken']})
     for i in range(len(results['items'])):
         metadata.append(

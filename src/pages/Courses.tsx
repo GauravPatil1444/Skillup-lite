@@ -3,11 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { useAppSelector, useAppDispatch } from "../store/hooks";
 import { logout } from "../store/authSlice";
 import { useQuery } from "@tanstack/react-query";
-import Loader from "./components/Loader";
 import CourseView from "./CourseView";
 import logo from "../assets/Logo.png";
+import search from "../assets/search.png";
+import logoutIcon from "../assets/exit.png";
 
-const TOPICS = [
+const topics = [
   "Web development",
   "Machine Learning",
   "Python",
@@ -22,13 +23,14 @@ const Courses = () => {
 
   // --- STATE ---
   const [page, setPage] = useState(1);
-  const [searchInp, setSearchInp] = useState("");
+  const [searchInp, setSearchInp] = useState(""); // The actual search term used for the API
+  const [localInput, setLocalInput] = useState(""); // The text currently in the input field
   const [viewCourse, setViewCourse] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<any>(null);
   const [coursevideolist, setCoursevideolist] = useState<any[]>([]);
   const [fetchingVideos, setFetchingVideos] = useState(false);
 
-  const limit = 8; // Mandatory limit for pagination
+  const limit = 8;
 
   // --- DATA FETCHING (REACT QUERY) ---
   const {
@@ -36,33 +38,46 @@ const Courses = () => {
     isLoading,
     isPlaceholderData,
   } = useQuery({
-    queryKey: ["courses", page, searchInp],
-    // Inside Courses.tsx -> useQuery
+    queryKey: ["courses", page, searchInp], // Watches searchInp, not localInput
     queryFn: async () => {
       const query = searchInp || "React";
       const res = await fetch(
         `http://127.0.0.1:8000/fetchcourses?_page=${page}&_limit=${limit}&q=${query}`,
       );
-      if (!res.ok) throw new Error("Backend connection failed");
 
       const rawData = await res.json();
-
       return rawData.filter(
         (item: any) => item && item.playlistId && item.title,
       );
     },
     placeholderData: (previousData) => previousData,
+    enabled: !viewCourse,
+    staleTime: 1000 * 60 * 5,
   });
 
   // --- HANDLERS ---
+  const handleSearch = () => {
+    setSearchInp(localInput); // Trigger API call
+    setPage(1);
+  };
+
+  const handleTopicClick = (topic: string) => {
+    setLocalInput(topic);
+    setSearchInp(topic); // Trigger API call
+    setPage(1);
+  };
+
   const handleLogout = () => {
     dispatch(logout());
     navigate("/login");
   };
 
-  // Inside Courses.tsx -> openCourse function
   const openCourse = async (item: any) => {
+    if (fetchingVideos) return;
     setFetchingVideos(true);
+    setSelectedCourse(item);
+    setViewCourse(true);
+
     try {
       const res = await fetch("http://127.0.0.1:8000/fetchcoursevideos", {
         method: "POST",
@@ -70,16 +85,9 @@ const Courses = () => {
         body: JSON.stringify({ q: item.playlistId }),
       });
       const videoData = await res.json();
-
-      // Pass the 'item' (course details) through state
-      navigate(`/learn/${item.playlistId}/overview`, {
-        state: {
-          courseDetails: item,
-          videos: videoData,
-        },
-      });
+      setCoursevideolist(videoData);
     } catch (error) {
-      console.error(error);
+      console.error("Error loading course preview:", error);
     } finally {
       setFetchingVideos(false);
     }
@@ -87,7 +95,7 @@ const Courses = () => {
 
   const handlePageChange = (newPage: number) => {
     setPage(newPage);
-    // Smooth scroll back to the start of the results
+    // When paging, we scroll to the top of the white modal
     window.scrollTo({ top: 400, behavior: "smooth" });
   };
 
@@ -103,57 +111,61 @@ const Courses = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#192A56] relative selection:bg-[#7D96FF] selection:text-white">
-      {/* TOP NAVIGATION BAR */}
-      <div className="absolute top-8 right-8 flex gap-4 z-20">
-        <button
-          onClick={() => navigate("/my-courses")}
-          className="px-5 py-2 rounded-xl bg-[#A5BEFC]/10 border border-white/20 text-[#FBFCF8] text-sm font-bold hover:bg-[#A5BEFC]/30 backdrop-blur-md transition-all"
-        >
-          My Courses
-        </button>
-        <button
-          onClick={handleLogout}
-          className="px-5 py-2 rounded-xl bg-red-500/10 border border-red-400/30 text-red-100 text-sm font-bold hover:bg-red-500/30 backdrop-blur-md transition-all"
-        >
-          Logout
-        </button>
-      </div>
+    <div className="min-h-screen bg-[#192A56] selection:bg-[#7D96FF] selection:text-white">
+      {/* 1. FIXED BACKGROUND HERO SECTION */}
+      <div className="fixed inset-0 h-[500px] bg-[#192A56] flex flex-col items-center pt-5 px-4 gap-5 z-0">
+        {/* TOP NAVIGATION BAR */}
+        <div className="absolute top-8 inset-x-0 px-6 flex justify-between md:justify-end md:gap-4 z-20">
+          <button
+            onClick={() => navigate("/my-courses")}
+            className="px-5 py-2 rounded-xl bg-[#A5BEFC]/10 border border-white/20 text-[#FBFCF8] text-sm font-bold hover:bg-[#A5BEFC]/30 backdrop-blur-md transition-all"
+          >
+            My Courses
+          </button>
+          <button
+            onClick={handleLogout}
+            className="px-5 py-2 rounded-xl bg-red-500/10 border border-red-400/30 text-red-100 text-sm font-bold hover:bg-red-500/30 backdrop-blur-md transition-all"
+          >
+            <img src={logoutIcon} width={25} alt="Logout" />
+          </button>
+        </div>
 
-      {/* HERO SECTION */}
-      <div className="flex flex-col items-center pt-24 pb-32 px-4 gap-8">
         <img
           src={logo}
           alt="Skillup"
-          className="w-32 mb-2 mt-8 animate-pulse-slow"
+          className="w-32 mb-2 mt-8 animate-pulse"
         />
+        <p className="text-gray-50 text-2xl font-medium">
+          Welcome, {user?.name || "Learner"}
+        </p>
 
-        <p className="text-gray-50 text-2xl">Welcome,{user?.name}</p>
-
-        <div className="w-full max-w-xl relative">
+        {/* SEARCH BAR WITH EXPLICIT BUTTON */}
+        <div className="w-full max-w-xl relative group">
           <input
             type="text"
             placeholder="What do you want to learn today?"
-            className="w-full bg-white/10 border border-white/20 rounded-2xl py-4 px-6 text-white text-center text-lg focus:outline-none focus:ring-2 focus:ring-[#7D96FF]/50 transition-all placeholder:text-white/40"
-            value={searchInp}
-            onChange={(e) => {
-              setSearchInp(e.target.value);
-              setPage(1);
-            }}
+            className="w-full bg-white/10 border border-white/20 rounded-2xl py-4 pl-6 pr-20 text-white text-lg focus:outline-none focus:ring-2 focus:ring-[#7D96FF]/50 transition-all placeholder:text-white/40"
+            value={localInput}
+            onChange={(e) => setLocalInput(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleSearch()}
           />
+          <button
+            onClick={handleSearch}
+            className="absolute right-2 top-1/2 -translate-y-1/2 cursor-pointer hover:bg-white/20 text-white p-3 rounded-xl transition-all shadow-lg active:scale-95"
+          >
+            <img src={search} width={25} alt="search" />
+          </button>
         </div>
 
-        <div className="w-full max-w-2xl flex overflow-x-auto gap-3 pb-4 scrollbar-hide justify-center px-4">
-          {TOPICS.map((topic) => (
+        {/* TOPICS */}
+        <div className="w-full max-w-4xl flex overflow-x-auto gap-3 pb-4 scrollbar-hide justify-center px-4">
+          {topics.map((topic) => (
             <button
               key={topic}
-              onClick={() => {
-                setSearchInp(topic);
-                setPage(1);
-              }}
+              onClick={() => handleTopicClick(topic)}
               className={`px-5 py-2 rounded-full whitespace-nowrap text-sm font-bold transition-all border ${
                 searchInp === topic
-                  ? "bg-[#7D96FF] border-[#7D96FF] text-white shadow-lg"
+                  ? "bg-[#7D96FF] border-[#7D96FF] text-white"
                   : "bg-white/5 border-white/10 text-white/70 hover:bg-white/10"
               }`}
             >
@@ -163,83 +175,84 @@ const Courses = () => {
         </div>
       </div>
 
-      {/* MAIN CONTENT AREA */}
-      <div className="bg-[#FBFCF8] rounded-t-[60px] min-h-[60vh] p-8 md:p-16 shadow-2xl relative -mt-10">
+      {/* 2. SCROLLABLE WHITE MODAL LAYER */}
+      <div className="relative z-10 mt-[420px] bg-[#FBFCF8] rounded-t-[60px] min-h-screen p-6 md:p-16 shadow-[0_-20px_50px_rgba(0,0,0,0.3)]">
         <div className="max-w-7xl mx-auto">
-          {isLoading ? (
-            <div className="flex flex-col items-center justify-center py-32 gap-4">
-              <Loader />
-              <p className="text-[#192A56]/40 font-bold animate-pulse">
-                Fetching your courses...
-              </p>
-            </div>
-          ) : (
-            <>
-              {/* GRID */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-10">
-                {metadata?.map((course: any) => (
-                  <div
-                    key={course.playlistId}
-                    onClick={() => openCourse(course)}
-                    className="group cursor-pointer hover:-translate-y-2 transition-all duration-300"
+          {/* HEADER PAGINATION */}
+          <div className="flex flex-col md:flex-row justify-between items-center mb-10 gap-6">
+            <h2 className="text-[#192A56] text-3xl font-black">
+              Explore Catalog
+            </h2>
+
+            <div className="flex items-center gap-4">
+              <button
+                disabled={page === 1}
+                onClick={() => handlePageChange(page - 1)}
+                className="w-10 h-10 flex items-center justify-center rounded-xl border-2 border-[#192A56] font-bold disabled:opacity-20 text-[#192A56] hover:bg-[#192A56] hover:text-white transition-all shadow-sm"
+              >
+                ←
+              </button>
+
+              <div className="flex items-center gap-2">
+                {[1, 2, 3].map((n) => (
+                  <button
+                    key={n}
+                    onClick={() => handlePageChange(n)}
+                    className={`w-10 h-10 rounded-xl font-black transition-all ${
+                      page === n
+                        ? "bg-[#192A56] text-white shadow-md scale-105"
+                        : "text-[#192A56] hover:bg-[#192A56]/5 border-2 border-transparent"
+                    }`}
                   >
-                    <div className="aspect-video rounded-3xl overflow-hidden mb-5 shadow-xl ring-1 ring-black/5">
-                      <img
-                        src={course.thumbnails}
-                        alt={course.title}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                      />
-                    </div>
-                    <h3 className="font-extrabold text-[#192A56] text-lg leading-snug line-clamp-2 group-hover:text-[#7D96FF] transition-colors">
-                      {course.title}
-                    </h3>
-                  </div>
+                    {n}
+                  </button>
                 ))}
               </div>
 
-              {/* CONSOLIDATED PAGINATION FOOTER */}
-              <div className="flex flex-col items-center mt-24 gap-6">
-                <div className="flex items-center gap-6">
-                  <button
-                    disabled={page === 1}
-                    onClick={() => handlePageChange(page - 1)}
-                    className="w-12 h-12 flex items-center justify-center rounded-2xl border-2 border-[#192A56] font-bold disabled:opacity-20 text-[#192A56] hover:bg-[#192A56] hover:text-white transition-all shadow-sm"
-                  >
-                    ←
-                  </button>
+              <button
+                disabled={
+                  isPlaceholderData || (metadata && metadata.length < limit)
+                }
+                onClick={() => handlePageChange(page + 1)}
+                className="w-10 h-10 flex items-center justify-center rounded-xl border-2 border-[#192A56] font-bold disabled:opacity-20 text-[#192A56] hover:bg-[#192A56] hover:text-white transition-all shadow-sm"
+              >
+                →
+              </button>
+            </div>
+          </div>
 
-                  <div className="flex items-center gap-3">
-                    {[1, 2, 3].map((n) => (
-                      <button
-                        key={n}
-                        onClick={() => handlePageChange(n)}
-                        className={`w-12 h-12 rounded-2xl font-black transition-all ${
-                          page === n
-                            ? "bg-[#192A56] text-white shadow-xl scale-110"
-                            : "text-[#192A56] hover:bg-[#192A56]/5 border-2 border-transparent"
-                        }`}
-                      >
-                        {n}
-                      </button>
-                    ))}
-                  </div>
-
-                  <button
-                    disabled={
-                      isPlaceholderData || (metadata && metadata.length < limit)
-                    }
-                    onClick={() => handlePageChange(page + 1)}
-                    className="w-12 h-12 flex items-center justify-center rounded-2xl border-2 border-[#192A56] font-bold disabled:opacity-20 text-[#192A56] hover:bg-[#192A56] hover:text-white transition-all shadow-sm"
-                  >
-                    →
-                  </button>
+          {/* SKELETON OR GRID SECTION */}
+          {isLoading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-10">
+              {[...Array(8)].map((_, i) => (
+                <div key={i} className="animate-pulse">
+                  <div className="aspect-video rounded-3xl bg-gray-200 mb-5 shadow-sm"></div>
+                  <div className="h-4 bg-gray-200 rounded-full w-3/4 mb-2"></div>
+                  <div className="h-4 bg-gray-200 rounded-full w-1/2"></div>
                 </div>
-
-                <p className="text-xs font-black text-[#192A56]/30 uppercase tracking-[0.2em]">
-                  Showing page {page}
-                </p>
-              </div>
-            </>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-10">
+              {metadata?.map((course: any) => (
+                <div
+                  key={course.playlistId}
+                  onClick={() => openCourse(course)}
+                  className="group cursor-pointer hover:-translate-y-2 transition-all duration-300"
+                >
+                  <div className="aspect-video rounded-3xl overflow-hidden mb-5 shadow-xl ring-1 ring-black/5">
+                    <img
+                      src={course.thumbnails}
+                      alt={course.title}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                    />
+                  </div>
+                  <h3 className="font-extrabold text-[#192A56] text-lg leading-snug line-clamp-2 group-hover:text-[#7D96FF] transition-colors">
+                    {course.title}
+                  </h3>
+                </div>
+              ))}
+            </div>
           )}
         </div>
       </div>
