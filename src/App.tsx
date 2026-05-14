@@ -14,7 +14,7 @@ import LearnLayout from "./pages/LearnLayout";
 import CourseOverview from "./pages/CourseOverview";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import CourseLessons from "./pages/CourseLessons";
-import Loader from "./pages/components/Loader";
+import Loader from "./components/Loader";
 
 const App = () => {
   const dispatch = useAppDispatch();

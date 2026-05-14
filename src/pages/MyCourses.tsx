@@ -3,9 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { useAppSelector, useAppDispatch } from "../store/hooks";
 import { logout } from "../store/authSlice";
 import logo from "../assets/Logo.png";
-import Loader from "./components/Loader";
+import Loader from "../components/Loader";
 import { useQuery } from "@tanstack/react-query";
 import logoutIcon from "../assets/exit.png";
+import CourseCard from "../components/CourseCard";
 
 const MyCourses = () => {
   const navigate = useNavigate();
@@ -93,50 +94,16 @@ const MyCourses = () => {
           ) : enrolledCourses && enrolledCourses.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-10">
               {enrolledCourses.map((course: any) => (
-                <div
+                <CourseCard
                   key={course.id}
-                  className="group cursor-pointer hover:-translate-y-2 transition-all duration-300"
+                  course={course}
+                  variant="dashboard"
                   onClick={() =>
                     navigate(`/learn/${course.courseId}/overview`, {
                       state: { selectedCourse: course },
                     })
                   }
-                >
-                  <div className="relative aspect-video rounded-3xl overflow-hidden mb-5 shadow-xl border border-gray-100">
-                    <img
-                      src={course.thumbnails}
-                      alt={course.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                    <div className="absolute top-4 left-4">
-                      <span
-                        className={`px-3 py-1 rounded-full text-xs font-bold shadow-md ${
-                          course.status === "Completed"
-                            ? "bg-green-500 text-white"
-                            : course.status === "In Progress"
-                              ? "bg-[#7D96FF] text-white"
-                              : "bg-gray-200 text-gray-700"
-                        }`}
-                      >
-                        {course.status || "Not Started"}
-                      </span>
-                    </div>
-                  </div>
-                  <h3 className="font-extrabold text-[#192A56] text-lg leading-tight mb-2 line-clamp-2">
-                    {course.title}
-                  </h3>
-                  <div className="flex items-center gap-2">
-                    <div className="flex-1 h-2 bg-gray-100 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-[#7D96FF]"
-                        style={{ width: `${course.progress || 0}%` }}
-                      ></div>
-                    </div>
-                    <span className="text-xs font-bold text-gray-400">
-                      {course.progress || 0}%
-                    </span>
-                  </div>
-                </div>
+                />
               ))}
             </div>
           ) : (

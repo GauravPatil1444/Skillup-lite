@@ -2,7 +2,8 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAppSelector } from "../store/hooks";
-import Loader from "./components/Loader";
+import Loader from "../components/Loader";
+import CourseCard from "../components/CourseCard";
 
 interface CourseViewProps {
   selectedCourse: any;
@@ -148,32 +149,17 @@ const CourseView: React.FC<CourseViewProps> = ({
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-10">
-              {paginatedVideos.map((video) => (
-                <div
+              {paginatedVideos.map((video: any) => (
+                <CourseCard
                   key={video.videoID}
-                  className="bg-white p-4 rounded-[32px] cursor-pointer hover:shadow-xl transition-all border border-gray-100 group"
+                  course={video}
+                  variant="lesson"
                   onClick={() =>
                     navigate(`/learn/${selectedCourse.playlistId}/overview`, {
                       state: { item: video },
                     })
                   }
-                >
-                  <div className="aspect-video rounded-[24px] overflow-hidden mb-5 bg-black relative">
-                    <img
-                      src={`https://img.youtube.com/vi/${video.videoID}/mqdefault.jpg`}
-                      alt={video.title}
-                      className="w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-500"
-                    />
-                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                      <div className="bg-[#7D96FF] w-12 h-12 rounded-full flex items-center justify-center text-white shadow-lg">
-                        ▶
-                      </div>
-                    </div>
-                  </div>
-                  <h3 className="font-extrabold text-[#192A56] text-lg leading-tight line-clamp-2">
-                    {video.title}
-                  </h3>
-                </div>
+                />
               ))}
             </div>
           )}

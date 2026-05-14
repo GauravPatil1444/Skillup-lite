@@ -4,8 +4,17 @@
         "courseId": "PLu71SKxNbfoDqgPchmvIsL4hTnJIrtige",
         "title": "Chai aur react | with projects",
         "thumbnails": "https://i.ytimg.com/vi/vz1RlUyrc3w/mqdefault.jpg",
-        "status": "Not Started",
-        "progress": 0,
+        "status": "In Progress",
+        "progress": 30,
         "id": "enr_1778678169"
+    },
+    {
+        "userId": "jknbbGlNuzbs8TaiCCsBEQ4PXyM2",
+        "courseId": "PLu0W_9lII9agx66oZnT6IyhcMIbUMNMdt",
+        "title": "React Js Tutorials in Hindi",
+        "thumbnails": "https://i.ytimg.com/vi/-mJFZp84TIY/mqdefault.jpg",
+        "status": "In Progress",
+        "progress": 10,
+        "id": "enr_1778695655"
     }
 ]

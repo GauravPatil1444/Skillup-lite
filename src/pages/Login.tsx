@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import logo from '../assets/Logo_dark.png';
-import { Button } from './components/Button';
+import { Button } from '../components/Button';
 import { useAppDispatch } from '../store/hooks';
 import { setUser, setError } from '../store/authSlice'; // Added setError
 import { 

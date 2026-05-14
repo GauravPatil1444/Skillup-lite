@@ -7,6 +7,7 @@ import CourseView from "./CourseView";
 import logo from "../assets/Logo.png";
 import search from "../assets/search.png";
 import logoutIcon from "../assets/exit.png";
+import CourseCard from "../components/CourseCard";
 
 const topics = [
   "Web development",
@@ -21,10 +22,9 @@ const Courses = () => {
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
 
-  // --- STATE ---
   const [page, setPage] = useState(1);
-  const [searchInp, setSearchInp] = useState(""); // The actual search term used for the API
-  const [localInput, setLocalInput] = useState(""); // The text currently in the input field
+  const [searchInp, setSearchInp] = useState(""); 
+  const [localInput, setLocalInput] = useState(""); 
   const [viewCourse, setViewCourse] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<any>(null);
   const [coursevideolist, setCoursevideolist] = useState<any[]>([]);
@@ -235,22 +235,12 @@ const Courses = () => {
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-10">
               {metadata?.map((course: any) => (
-                <div
+                <CourseCard
                   key={course.playlistId}
+                  course={course}
+                  variant="catalog"
                   onClick={() => openCourse(course)}
-                  className="group cursor-pointer hover:-translate-y-2 transition-all duration-300"
-                >
-                  <div className="aspect-video rounded-3xl overflow-hidden mb-5 shadow-xl ring-1 ring-black/5">
-                    <img
-                      src={course.thumbnails}
-                      alt={course.title}
-                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                    />
-                  </div>
-                  <h3 className="font-extrabold text-[#192A56] text-lg leading-snug line-clamp-2 group-hover:text-[#7D96FF] transition-colors">
-                    {course.title}
-                  </h3>
-                </div>
+                />
               ))}
             </div>
           )}
