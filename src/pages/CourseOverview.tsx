@@ -9,7 +9,6 @@ const CourseOverview = () => {
     return <p className="text-gray-400 font-bold">Loading course details...</p>;
   }
 
-  // Read last watched video from localStorage using courseId as key
   const storedVideo = localStorage.getItem(`lastVideo_${selectedCourse.courseId}`);
   const lastVideo = storedVideo ? JSON.parse(storedVideo) : null;
 
@@ -56,7 +55,6 @@ const CourseOverview = () => {
           </div>
         </div>
 
-        {/* Continue Learning / Start Course button */}
         <button
           onClick={handleContinue}
           className="w-full py-4 rounded-2xl bg-[#192A56] text-white font-black hover:bg-[#192A56]/90 transition-all shadow-lg active:scale-95"
@@ -64,7 +62,6 @@ const CourseOverview = () => {
           {lastVideo ? "Continue Learning" : "Start Course"}
         </button>
 
-        {/* Show last watched video title if resuming */}
         {lastVideo && (
           <p className="text-xs text-gray-400 text-center mt-3 font-medium truncate">
             Last watched: {lastVideo.title}

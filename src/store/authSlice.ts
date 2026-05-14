@@ -11,7 +11,6 @@ interface AuthState {
   user: User | null;
   loading: boolean;
   error: string | null;
-  // Added to track if Firebase has finished its initial check
   isInitialized: boolean; 
 }
 
@@ -28,7 +27,6 @@ export const authSlice = createSlice({
   reducers: {
     setUser: (state, action: PayloadAction<User | null>) => {
       state.user = action.payload;
-      // Once we set the user (or null), we are initialized
       state.isInitialized = true; 
       state.loading = false;
     },
@@ -42,6 +40,7 @@ export const authSlice = createSlice({
     logout: (state) => {
       state.user = null;
       state.isInitialized = true;
+      localStorage.removeItem("user");
     },
   },
 });

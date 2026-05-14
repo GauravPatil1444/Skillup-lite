@@ -1,10 +1,5 @@
 import React, { useEffect } from "react";
-import {
-  useOutletContext,
-  useNavigate,
-  useLocation,
-  useParams,
-} from "react-router-dom";
+import {useOutletContext,useNavigate,useLocation,useParams} from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import play from "../assets/play.png";
 
@@ -12,14 +7,13 @@ const CourseLessons = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const queryClient = useQueryClient();
-  const { id: courseId } = useParams(); // always reliable, from URL
+  const { id: courseId } = useParams();
 
   const { coursevideolist, enrollmentId } = useOutletContext<{
     coursevideolist: any[];
     enrollmentId: string | null;
   }>();
 
-  // Auto-navigate to last watched video when coming from "Continue Learning"
   const autoPlayVideoId = location.state?.autoPlayVideoId;
 
   useEffect(() => {
@@ -28,7 +22,7 @@ const CourseLessons = () => {
       if (video) {
         navigate("/video-preview", {
           state: { item: { ...video, courseId } },
-          replace: true, // replaces the current history entry so back button works correctly
+          replace: true,
         });
       }
     }
@@ -47,7 +41,7 @@ const CourseLessons = () => {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            status: "In Progress", // fixed casing
+            status: "In Progress",
             lastVideo: video.videoID,
           }),
         },
@@ -72,7 +66,7 @@ const CourseLessons = () => {
               state: {
                 item: {
                   ...video,
-                  courseId, // from useParams, always present
+                  courseId,
                 },
               },
             });

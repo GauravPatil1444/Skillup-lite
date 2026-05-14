@@ -2,11 +2,11 @@ import React, { useState } from 'react';
 import logo from '../assets/Logo_dark.png';
 import { Button } from '../components/Button';
 import { useAppDispatch } from '../store/hooks';
-import { setUser, setError } from '../store/authSlice'; // Added setError
+import { setUser, setError } from '../store/authSlice'; 
 import { 
   signInWithEmailAndPassword, 
   createUserWithEmailAndPassword, 
-  updateProfile, // Import updateProfile
+  updateProfile, 
   setPersistence,
   browserLocalPersistence 
 } from "firebase/auth";
@@ -35,14 +35,11 @@ const Login = () => {
 
     setLoader(true);
     try {
-      // Set persistence to LOCAL so the session survives refreshes
       await setPersistence(auth, browserLocalPersistence);
 
       if (!isLoginMode) {
-        // --- CREATE ACCOUNT LOGIC ---
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        
-        // CRITICAL: Update the Firebase profile with the entered name
+
         await updateProfile(userCredential.user, {
           displayName: username
         });
@@ -56,7 +53,7 @@ const Login = () => {
         
         navigate('/courses');
       } else {
-        // --- LOGIN LOGIC ---
+
         const response = await signInWithEmailAndPassword(auth, email, password);
         const user = response.user;
 

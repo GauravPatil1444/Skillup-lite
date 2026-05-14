@@ -12,8 +12,8 @@ const Loader: React.FC = () => {
   const spinnerStyle: React.CSSProperties = {
     width: '40px',
     height: '40px',
-    border: '4px solid rgba(165, 190, 252, 0.2)', // Light secondary tint
-    borderTop: '4px solid rgb(25, 42, 86)', // Primary Navy Blue
+    border: '4px solid rgba(165, 190, 252, 0.2)', 
+    borderTop: '4px solid rgb(25, 42, 86)', 
     borderRadius: '50%',
     animation: 'spin 1s linear infinite',
   };
@@ -28,7 +28,6 @@ const Loader: React.FC = () => {
 
   return (
     <div style={loaderStyle}>
-      {/* Inline style for the spin animation */}
       <style>
         {`
           @keyframes spin {

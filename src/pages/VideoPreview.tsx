@@ -42,7 +42,7 @@ const VideoPreview = () => {
           onClick={() =>
             navigate(`/learn/${item.courseId}/lessons`, {
               replace: true,
-              state: {}, // clears autoPlayVideoId so the useEffect doesn't re-fire
+              state: {},
             })
           }
           className="px-5 py-2 rounded-lg bg-[#A5BEFC]/20 border border-[#FBFCF8] text-[#FBFCF8] text-sm font-bold hover:bg-[#A5BEFC]/40 transition-all"

@@ -7,13 +7,14 @@ import Loader from "../components/Loader";
 import { useQuery } from "@tanstack/react-query";
 import logoutIcon from "../assets/exit.png";
 import CourseCard from "../components/CourseCard";
+import { signOut } from "firebase/auth";
+import { auth } from "../services/firebaseConfig";
 
 const MyCourses = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
 
-  // Replaced manual useEffect with useQuery
   const {
     data: enrolledCourses,
     isLoading,
@@ -21,24 +22,28 @@ const MyCourses = () => {
   } = useQuery({
     queryKey: ["my-enrollments", user?.id],
     queryFn: async () => {
-      // Aligned with GET /enrollments?userId=:userId
       const res = await fetch(
         `http://127.0.0.1:8000/enrollments?userId=${user?.id}`,
       );
       if (!res.ok) throw new Error("Failed to fetch enrolled courses");
       return res.json();
     },
-    enabled: !!user?.id, // Only run the query if a user ID exists
+    enabled: !!user?.id, 
   });
 
-  const handleLogout = () => {
-    dispatch(logout());
-    navigate("/login");
-  };
+  const handleLogout = async () => {
+  try {
+    await signOut(auth); 
+    dispatch(logout());  
+    navigate("/login", { replace: true }); 
+  } catch (error) {
+    console.error("Logout failed", error);
+  }
+};
 
   return (
     <div className="min-h-screen bg-[#192A56] font-sans relative">
-      {/* Action Buttons */}
+  
       <div className="absolute top-8 inset-x-0 px-6 flex justify-between md:justify-end md:gap-4 z-20">
         <button
           onClick={() => navigate("/courses")}
@@ -54,7 +59,6 @@ const MyCourses = () => {
         </button>
       </div>
 
-      {/* Header Section */}
       <div className="flex flex-col items-center pt-14 pb-10 px-4 gap-4 text-center">
         <img
           src={logo}
@@ -71,7 +75,6 @@ const MyCourses = () => {
         </div>
       </div>
 
-      {/* Course Content Area */}
       <div className="bg-[#FBFCF8] rounded-t-[60px] min-h-[60vh] px-4 md:px-16 py-10 shadow-2xl">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-between mb-12">

@@ -20,26 +20,21 @@ const LearnLayout = () => {
       setLoading(true);
       
       try {
-        // 1. Fetch the Enrollment details from Firestore
-        // This is crucial because it contains the channelTitle (instructor name)
         const enrollRes = await fetch(`http://127.0.0.1:8000/enrollments?userId=${user.id}`);
         const enrollments = await enrollRes.json();
         const currentEnrollment = enrollments.find((e: any) => e.courseId === id);
 
         if (currentEnrollment) {
           setEnrollmentId(currentEnrollment.id);
-          
-          // 2. DATA RECOVERY: If selectedCourse is missing (on refresh), restore it from Firestore
+
           if (!selectedCourse) {
             setSelectedCourse({
               ...currentEnrollment,
-              // Fallback if channelTitle is missing in old records
               channelTitle: currentEnrollment.channelTitle || "Expert Instructor"
             });
           }
         }
 
-        // 3. Fetch Course Videos
         const videoRes = await fetch('http://127.0.0.1:8000/fetchcoursevideos', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -61,7 +56,6 @@ const LearnLayout = () => {
 
   return (
     <div className="min-h-screen bg-[#192A56]">
-      {/* Top Nav */}
       <div className="absolute top-8 inset-x-0 px-6 flex justify-between md:justify-end md:gap-4 z-20">
         <button
           onClick={() => navigate("/courses")}
