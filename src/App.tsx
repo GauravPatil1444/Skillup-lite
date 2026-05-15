@@ -13,6 +13,7 @@ import CourseOverview from "./pages/CourseOverview";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import CourseLessons from "./pages/CourseLessons";
 import Loader from "./components/Loader";
+import VideoPreview from "./pages/VideoPreview";
 
 const App = () => {
   const dispatch = useAppDispatch();
@@ -50,10 +51,11 @@ const App = () => {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/courses" element={<Courses />} />
-    
-        <Route element={<ProtectedRoute/>}>
+
+        <Route element={<ProtectedRoute />}>
           <Route path="/courses/:id" element={<CourseView />} />
           <Route path="/my-courses" element={<MyCourses />} />
+          <Route path="/video-preview" element={<VideoPreview />} />
           <Route path="/learn/:id" element={<LearnLayout />}>
             <Route index element={<Navigate to="overview" replace />} />
             <Route path="overview" element={<CourseOverview />} />
